@@ -32,6 +32,7 @@ class FIPP(RSA):
     def flow_arrival(self, flow: Flow) -> None:
         demand_in_slots = math.ceil(flow.get_rate() / self.pt.get_slot_capacity())
 
+        # find working path
         k_paths = list(islice(nx.shortest_simple_paths(self.graph, flow.get_source(), flow.get_destination(), weight="weight"), 5))
 
         spectrum = [[True for _ in range(self.pt.get_num_slots())] for _ in range(self.pt.get_cores())]
@@ -62,24 +63,26 @@ class FIPP(RSA):
             self.cp.block_flow(flow.get_id())
             return
 
+        # find protecting path
         links = [0 for _ in range(len(primary_path) - 1)]
         for j in range(0, len(primary_path) - 1, 1):
             links[j] = self.pt.get_link_id(primary_path[j], primary_path[j + 1])
         if primary_path:
-            g_backup = self.remove_intermediate_nodes(primary_path)
-            if nx.has_path(g_backup, flow.get_source(), flow.get_destination()):
-                k_paths_protection = list(islice(nx.shortest_simple_paths(g_backup, flow.get_source(), flow.get_destination(), weight="weight"),3))
-                if k_paths_protection:
-                    # print("k_paths_protection", k_paths_protection)
-                    if self.vt.get_p_cycles() == [] or self.vt.check_all_p_cycles_protection(flow.get_source(), flow.get_destination(), demand_in_slots) is None:
-                        for i in range(len(k_paths_protection)):
-                            if self.create_p_cycle_from_paths(primary_path, k_paths_protection[i], demand_in_slots, sharing_spectrum):
-                                if self.fit_connection(regions, demand_in_slots, links, flow):
-                                    return
-                    elif self.vt.get_p_cycles():
-                        if self.vt.check_all_p_cycles_protection(primary_path[0], primary_path[-1], demand_in_slots) is not None:
-                            if self.fit_connection(regions, demand_in_slots, links, flow):
-                                return
+
+            # g_backup = self.remove_intermediate_nodes(primary_path)
+            # if nx.has_path(g_backup, flow.get_source(), flow.get_destination()):
+            #     k_paths_protection = list(islice(nx.shortest_simple_paths(g_backup, flow.get_source(), flow.get_destination(), weight="weight"),3))
+            #     if k_paths_protection:
+            #         # print("k_paths_protection", k_paths_protection)
+            #         if self.vt.get_p_cycles() == [] or self.vt.check_all_p_cycles_protection(flow.get_source(), flow.get_destination(), demand_in_slots) is None:
+            #             for i in range(len(k_paths_protection)):
+            #                 if self.create_p_cycle_from_paths(primary_path, k_paths_protection[i], demand_in_slots, sharing_spectrum):
+            #                     if self.fit_connection(regions, demand_in_slots, links, flow):
+            #                         return
+            #         elif self.vt.get_p_cycles():
+            #             if self.vt.check_all_p_cycles_protection(primary_path[0], primary_path[-1], demand_in_slots) is not None:
+            #                 if self.fit_connection(regions, demand_in_slots, links, flow):
+            #                     return
 
         self.cp.block_flow(flow.get_id())
         return
