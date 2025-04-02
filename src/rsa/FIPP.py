@@ -40,6 +40,8 @@ class FIPP(RSA):
         sharing_spectrum = [[True for _ in range(self.pt.get_num_slots())] for _ in range(self.pt.get_cores())]
 
         primary_path = None
+        p_cycles = self.vt.get_p_cycles()
+
         regions = {}
         for k in range(0, len(k_paths), 1):
             for i in range(0, len(k_paths[k]) - 1, 1):
@@ -67,7 +69,14 @@ class FIPP(RSA):
         links = [0 for _ in range(len(primary_path) - 1)]
         for j in range(0, len(primary_path) - 1, 1):
             links[j] = self.pt.get_link_id(primary_path[j], primary_path[j + 1])
+        p_cycles_can_protect = []
         if primary_path:
+            for p_cycle in p_cycles:
+                if p_cycle.p_cycle_contains_flow(primary_path[0], primary_path[-1]):
+                    if p_cycle.can_add_links_disjoint(links):
+                        if p_cycle.has_sufficient_slots(demand_in_slots):
+                            p_cycles_can_protect.append(p_cycle)
+        if p_cycles_can_protect:
 
             # g_backup = self.remove_intermediate_nodes(primary_path)
             # if nx.has_path(g_backup, flow.get_source(), flow.get_destination()):

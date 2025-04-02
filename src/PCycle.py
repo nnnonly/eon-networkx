@@ -2,7 +2,7 @@ from typing import List
 from src.ProtectingLightPath import ProtectingLightPath
 
 class PCycle:
-    def __init__(self, cycle_links, protected_lightpaths=List[ProtectingLightPath], be_protection = List[ProtectingLightPath], reserved_slots=0):
+    def __init__(self, cycle_links, protected_lightpaths=List[ProtectingLightPath], be_protection = List[List[ProtectingLightPath]], reserved_slots=0):
         """
         Initialize P-cycle
         :param cycle_links: List of links in P-cycle [(src1, dst1), (src2, dst2), ...]
@@ -46,10 +46,6 @@ class PCycle:
                 return True
         return False
 
-    def get_edges(path):
-        # Convert path into list of edges
-        return set((path[i], path[i + 1]) for i in range(len(path) - 1))
-
     def get_all_lp(self, lps: List[ProtectingLightPath]) -> List[List[int]]:
         """get all lightpaths that are protected by the P-cycle"""
         paths = []
@@ -57,21 +53,16 @@ class PCycle:
             paths.append(lp.get_links())
         return paths
 
-    def add_links_disjoint(self, new_lp: List[int]):
+    def can_add_links_disjoint(self, new_lp: List[int]):
         """add links p-cycle can protect"""
         if self.protected_lightpaths:
             lp_protected = self.get_all_lp(self.protected_lightpaths)
-            new_lp_protected = get_eges(new_lp)
-
-            for idx, path in enumerate(lp_protected):
-                edges = get_edges(path)
-
-                if not new_lp_protected.isdisjoint(edges):
+            for lp in lp_protected:
+                if bool(set(lp) & set(new_lp)):
                     return False
-
-
             return True
 
+    def
 
     def __str__(self):
         return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}"
