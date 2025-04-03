@@ -2,7 +2,7 @@ from typing import List
 from src.ProtectingLightPath import ProtectingLightPath
 
 class PCycle:
-    def __init__(self, cycle_links, protected_lightpaths=List[ProtectingLightPath], be_protection = List[List[ProtectingLightPath]], reserved_slots=0):
+    def __init__(self, cycle_links, protected_lightpaths=List[ProtectingLightPath], be_protection = List[List[ProtectingLightPath]], reserved_slots=0, slot_list=List[Slot]):
         """
         Initialize P-cycle
         :param cycle_links: List of links in P-cycle [(src1, dst1), (src2, dst2), ...]
@@ -13,6 +13,7 @@ class PCycle:
         self.protected_lightpaths = protected_lightpaths if protected_lightpaths else []
         self.be_protection = be_protection if be_protection else []
         self.reserved_slots = reserved_slots
+        self.slot_list = slot_list
 
     def add_protected_lightpath(self, lightpath):
         if lightpath not in self.protected_lightpaths:
@@ -62,7 +63,14 @@ class PCycle:
                     return False
             return True
 
-    def
+    # tao cac set be_protection disjoint voi nhau
+    def add_lp_to_be_protected(self, lightpath):
+        if self.be_protection:
+            for s in self.be_protection:
+                lp_be_protected = self.get_all_lp(s)
+                for lp in lp_be_protected:
+                    if bool(set(lp) & set(lp)):
+                        return False
 
     def __str__(self):
         return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}"

@@ -93,12 +93,6 @@ class VirtualTopology:
     
     def add_p_cycles(self, cycle: PCycle):
         self.p_cycles.append(cycle)
-    
-    def check_all_p_cycles_protection(self, src, dst, demand_in_slots):
-        for cycle in self.p_cycles:
-            if cycle.p_cycle_contains_flow(src, dst, demand_in_slots):
-                return cycle
-        return None
 
     def __str__(self):
         topo = ""
