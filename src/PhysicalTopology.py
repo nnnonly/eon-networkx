@@ -75,6 +75,9 @@ class PhysicalTopology:
     def get_graph(self):
         return self.graph
 
+    def set_graph(self, graph):
+        self.graph = graph
+
     def get_link(self, link_id: int):
         for edge in self.graph.edges(data=True):
             if edge[2].get("id") == link_id:  # Check if the edge has the requested ID
@@ -140,21 +143,6 @@ class PhysicalTopology:
 
         free_slots = [[True for _ in range(slots)] for _ in range(cores)]
         for core, slot in reserved_slots:
-            free_slots[core][slot] = False
-
-        return free_slots
-    
-    def get_sharing_spectrum(self, src: int, dst: int) -> List[List[bool]]:
-        if not self.graph.has_edge(src, dst):
-            return []
-
-        edge_data = self.graph.edges[src, dst]
-        cores = self.cores
-        slots = self.slots
-        sharing_slots = edge_data["sharing_slots"]
-
-        free_slots = [[True for _ in range(slots)] for _ in range(cores)]
-        for core, slot in sharing_slots:
             free_slots[core][slot] = False
 
         return free_slots
