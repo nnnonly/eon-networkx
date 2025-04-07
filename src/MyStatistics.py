@@ -10,6 +10,7 @@ from src.Modulations import Modulations
 from src.Event import Event
 from src.FlowArrivalEvent import FlowArrivalEvent
 from src.FlowDepartureEvent import FlowDepartureEvent
+from src.VirtualTopology import VirtualTopology
 
 
 class MyStatistics:
@@ -19,6 +20,7 @@ class MyStatistics:
         self.verbose = False
         self.plotter = OutputManager
         self.pt = PhysicalTopology
+        self.vt = VirtualTopology
         self.traffic = TrafficGenerator
 
         self.min_number_arrivals = 0
@@ -68,11 +70,12 @@ class MyStatistics:
     def __copy__(self):
         raise Exception("CloneNotSupportedException")
 
-    def statistics_setup(self, plotter: OutputManager, pt: PhysicalTopology, traffic: TrafficGenerator, num_nodes: int,
+    def statistics_setup(self, plotter: OutputManager, pt: PhysicalTopology, vt: VirtualTopology, traffic: TrafficGenerator, num_nodes: int,
                          num_classes: int, min_number_arrivals: int, load: float, verbose: bool) -> None:
         self.verbose = verbose
         self.plotter = plotter
         self.pt = pt
+        self.vt = vt
         self.traffic = traffic
 
         self.num_nodes = num_nodes
@@ -229,7 +232,7 @@ class MyStatistics:
                         event.get_flow().get_destination()] += event.get_flow().get_rate()
                     self.required_bandwidth_pairs_diff[cos][event.get_flow().get_source()][
                         event.get_flow().get_destination()] += event.get_flow().get_rate()
-                if self.verbose and (self.arrivals % 10000 == 0):
+                if self.verbose and (self.arrivals % 100000 == 0):
                     print(self.verbose)
                     print(self.arrivals)
             elif isinstance(event, FlowDepartureEvent):
@@ -240,7 +243,28 @@ class MyStatistics:
                     self.number_of_used_transponders[f.get_source()][f.get_destination()] -= 1
             if self.number_arrivals % 100 == 0:
                 self.calculate_periodical_statistics()
-            if self.number_arrivals % 5000 == 0:
+            if self.number_arrivals % 1000 == 0:
+                cycles_to_remove = []
+                for i in range(len(self.vt.get_p_cycles()) - 1, -1, -1):
+                    for j in range(len(self.vt.get_p_cycles())):
+                        if bool(set(self.vt.get_p_cycles()[i].get_all_lp_id(
+                                self.vt.get_p_cycles()[i].get_protected_lightpaths())) & set(
+                                self.vt.get_p_cycles()[j].get_all_lp_id(self.vt.get_p_cycles()[j].get_be_protected()))):
+                            for lp in self.vt.get_p_cycles()[i].get_protected_lightpaths():
+                                self.vt.get_p_cycles()[j].add_protected_lightpath(lp)
+                                print(lp.get_id())
+
+                                print(self.vt.get_light_path(lp.get_id()))
+                                self.vt.get_light_path(lp.get_id()).set_p_cycle(self.vt.get_p_cycles()[j])
+                            cycles_to_remove.append(self.vt.get_p_cycles()[i])
+                print("cycles_to_remove: ", len(cycles_to_remove))
+                for cycle in cycles_to_remove:
+                    if not cycle.get_all_lp():
+                        for i in range(0, len(cycle.get_cycle_links()), 1):
+                            self.pt.release_slots(self.pt.get_src_link(cycle.get_cycle_links()[i]),
+                                                  self.pt.get_dst_link(cycle.get_cycle_links()[i]),
+                                                  cycle.get_slot_list())
+                    self.p_cycles.remove(cycle)
                 print("MyStatistics: 5000")
         except Exception as e:
             print("Error in MyStatistics: ", e)

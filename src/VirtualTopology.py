@@ -42,6 +42,13 @@ class VirtualTopology:
         self.next_lightpath_id += 1
         return id
 
+    def get_all_light_paths(self) -> List[int]:
+        list_id_lp = []
+        for src, dst, data in self.g_lightpath.edges(data=True):
+            if "lightpath" in data:
+                list_id_lp.append(data["lightpath"].get_id())
+        return list_id_lp
+
     def get_light_path(self, id: float) -> LightPath:
         for src, dst, data in self.g_lightpath.edges(data=True):
             if "lightpath" in data and data["lightpath"].get_id() == id:
@@ -72,6 +79,7 @@ class VirtualTopology:
             for src, dst, data in list(self.g_lightpath.edges(data=True)):  # Iterate over edges
                 if "lightpath" in data and data["lightpath"].get_id() == id:
                     lp = data["lightpath"]
+                    self.remove_lp_p_cycle(lp)
                     self.remove_light_path_from_pt(lp.get_links(), lp.get_slot_list())  # Release slots
                     self.g_lightpath.remove_edge(src, dst)  # Remove the edge from the graph
                     # self.list_nodes.remove((src, dst))
@@ -88,6 +96,7 @@ class VirtualTopology:
             dst = self.pt.get_dst_link(link)
             self.pt.release_slots(src, dst, slot_list)
 
+
     def get_p_cycles(self) -> List[PCycle]:
         return self.p_cycles
     
@@ -95,9 +104,13 @@ class VirtualTopology:
         self.p_cycles.append(cycle)
 
     def remove_lp_p_cycle(self, lp: LightPath):
+        print("Total", len(self.p_cycles), "p_cycles")
+        print("Total LP", len(self.get_all_light_paths()))
+        print("List LP", self.get_all_light_paths())
         p_cycle_protect = lp.get_p_cycle()
-        p_cycle_protect.remove_protected_lightpath(lp)
+        p_cycle_protect.remove_protected_lightpath(lp.get_id())
         if not p_cycle_protect.get_all_lp():
+            self.p_cycles.remove(p_cycle_protect)
             for i in range(0, len(p_cycle_protect.get_cycle_links()), 1):
                 self.pt.release_slots(self.pt.get_src_link(p_cycle_protect.get_cycle_links()[i]),
                                       self.pt.get_dst_link(p_cycle_protect.get_cycle_links()[i]),
@@ -105,7 +118,6 @@ class VirtualTopology:
         list_protect = lp.get_list_be_protected()
         for lp in list_protect:
             lp.remove_be_protected_lightpath(lp)
-
     def __str__(self):
         topo = ""
         for src in self.g_lightpath.nodes():

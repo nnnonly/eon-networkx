@@ -6,7 +6,7 @@ if __name__ == '__main__':
     verbose = True
 
     forced_load = 50
-    num_simulations = 5
+    num_simulations = 1
 
     Simulator(sim_config_file, trace, verbose, forced_load, num_simulations)
 

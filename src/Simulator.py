@@ -101,7 +101,7 @@ class Simulator:
                     print("(4) Loading simulation setup information...")
 
                 st = MyStatistics.get_my_statistics()
-                st.statistics_setup(gp, pt, traffic, pt.get_num_nodes(), 3, 0, forced_load, Simulator.verbose)
+                st.statistics_setup(gp, pt, vt, traffic, pt.get_num_nodes(), 3, 0, forced_load, Simulator.verbose)
 
                 tr = Tracer.get_tracer_object()
 

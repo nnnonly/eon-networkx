@@ -81,7 +81,7 @@ class FIPP(RSA):
             links[j] = self.pt.get_link_id(primary_path[j], primary_path[j + 1])
 
         p_cycles = self.vt.get_p_cycles()
-        if primary_path:
+        if primary_path and fitted_slot_list:
             p_cycles_can_protect = []
             p_cycles_not_enough_slots = []
             for p_cycle in p_cycles:
@@ -139,7 +139,8 @@ class FIPP(RSA):
                                 p_cycle.set_slot_list(fitted_slot_list)
                                 p_cycle.add_protected_lightpath(protected_lp)
                                 return
-
+                            if res_p_cycle and not res_connect:
+                                self.vt.get_p_cycles().remove(p_cycle)
         self.cp.block_flow(flow.get_id())
         return
 
@@ -154,12 +155,14 @@ class FIPP(RSA):
         return fitted_slot_list
 
     def fit_connection(self, links: List[int], flow: Flow, fitted_slot_list: List[Slot], p_cycle: PCycle) -> Tuple[bool, Optional[int]]:
-        success, lp_id = self.establish_connection(links, fitted_slot_list, 0, flow, p_cycle)
-        if success:
-            return True, lp_id
+        if fitted_slot_list:
+            success, lp_id = self.establish_connection(links, fitted_slot_list, 0, flow, p_cycle)
+            if success:
+                return True, lp_id
         return False, None
 
     def establish_connection(self, links: List[int], slot_list: List[Slot], modulation: int, flow: Flow, p_cycle: PCycle) -> Tuple[bool, Optional[int]]:
+        # print("establish_connection", links, len(slot_list), p_cycle)
         id = self.vt.create_light_path(links, slot_list, 0, p_cycle)
         if id >= 0:
             lps = self.vt.get_light_path(id)
