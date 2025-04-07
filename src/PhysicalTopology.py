@@ -45,7 +45,7 @@ class PhysicalTopology:
                         bandwidth = float(link.attrib["bandwidth"])
                         weight = float(link.attrib["weight"])
                         distance = int(link.attrib["distance"])
-                        self.graph.add_edge(src, dst, id=id, delay=delay, slot=self.slots, weight=weight, reserved_slots=set(), sharing_slots=set())
+                        self.graph.add_edge(src, dst, id=id, delay=delay, slot=self.slots, weight=weight, reserved_slots=set())
                 else:
                     raise ValueError("Unknown element " + child.tag + " in the physical topology file!")
 
@@ -74,6 +74,9 @@ class PhysicalTopology:
 
     def get_graph(self):
         return self.graph
+
+    def set_graph(self, graph):
+        self.graph = graph
 
     def get_link(self, link_id: int):
         for edge in self.graph.edges(data=True):
@@ -143,21 +146,6 @@ class PhysicalTopology:
             free_slots[core][slot] = False
 
         return free_slots
-    
-    def get_sharing_spectrum(self, src: int, dst: int) -> List[List[bool]]:
-        if not self.graph.has_edge(src, dst):
-            return []
-
-        edge_data = self.graph.edges[src, dst]
-        cores = self.cores
-        slots = self.slots
-        sharing_slots = edge_data["sharing_slots"]
-
-        free_slots = [[True for _ in range(slots)] for _ in range(cores)]
-        for core, slot in sharing_slots:
-            free_slots[core][slot] = False
-
-        return free_slots
 
     def are_slots_available(self, src: int, dst: int, slot_list: List[Slot]) -> bool:
         if not self.graph.has_edge(src, dst):
@@ -193,29 +181,28 @@ class PhysicalTopology:
             for s in slot_list:
                 # Add the new slot to the reserved_slots set
                 edge_data["reserved_slots"].add((s.core, s.slot))
-                edge_data["sharing_slots"].add((s.core, s.slot))
             return True
         except Exception as e:
             raise e
             exit(1)
             return False
 
-    def reserve_sharing_lots(self, src: int, dst: int, slot_list: List[Slot]) -> bool:
-        try:
-            assert self.graph.has_edge(src, dst), "Edge does not exist"
-            edge_data = self.graph[src][dst]
-            for i in range(0, len(slot_list), 1):
-                assert 0 <= slot_list[i].core < self.cores, "Illegal argument exception"
-                assert 0 <= slot_list[i].slot < self.slots, "Illegal argument exception"
-
-            for s in slot_list:
-                # Add the new slot to the reserved_sharing_slots set
-                edge_data["sharing_slots"].add((s.core, s.slot))
-            return True
-        except Exception as e:
-            raise e
-            exit(1)
-            return False
+    # def reserve_sharing_lots(self, src: int, dst: int, slot_list: List[Slot]) -> bool:
+    #     try:
+    #         assert self.graph.has_edge(src, dst), "Edge does not exist"
+    #         edge_data = self.graph[src][dst]
+    #         for i in range(0, len(slot_list), 1):
+    #             assert 0 <= slot_list[i].core < self.cores, "Illegal argument exception"
+    #             assert 0 <= slot_list[i].slot < self.slots, "Illegal argument exception"
+    #
+    #         for s in slot_list:
+    #             # Add the new slot to the reserved_sharing_slots set
+    #             edge_data["sharing_slots"].add((s.core, s.slot))
+    #         return True
+    #     except Exception as e:
+    #         raise e
+    #         exit(1)
+    #         return False
 
     def release_slots(self, src: int, dst: int, slot_list: List[Slot]) -> None:
         try:
@@ -225,13 +212,9 @@ class PhysicalTopology:
                 assert 0 <= slot_list[i].core < self.cores, "Illegal argument exception"
                 assert 0 <= slot_list[i].slot < self.slots, "Illegal argument exception"
             reserved_slots = edge_data["reserved_slots"]
-            sharing_slots = edge_data["sharing_slots"]
             for s in slot_list:
                 reserved_slots.discard((s.core, s.slot))
-                sharing_slots.discard((s.core, s.slot))
-
             self.graph[src][dst]["reserved_slots"] = reserved_slots
-            self.graph[src][dst]["sharing_slots"] = sharing_slots
         except Exception as e:
             raise e
         

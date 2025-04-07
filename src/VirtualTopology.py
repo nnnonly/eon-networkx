@@ -23,7 +23,7 @@ class VirtualTopology:
         for i in range(num_nodes):
             self.g_lightpath.add_node(i)
 
-    def create_light_path(self, links: List[int], slot_list: List[Slot], modulation_level: int) -> float:
+    def create_light_path(self, links: List[int], slot_list: List[Slot], modulation_level: int, p_cycle: PCycle) -> float:
         if len(links) < 1:
             raise ValueError("Invalid links")
 
@@ -36,7 +36,7 @@ class VirtualTopology:
         dst = self.pt.get_dst_link(links[-1])
         id = self.next_lightpath_id
 
-        lp = LightPath(id, src, dst, links, slot_list, modulation_level)
+        lp = LightPath(id, src, dst, links, slot_list, modulation_level, p_cycle)
         self.g_lightpath.add_edge(src, dst, lightpath=lp)
         self.tr.create_lightpath(lp)
         self.next_lightpath_id += 1
@@ -93,12 +93,18 @@ class VirtualTopology:
     
     def add_p_cycles(self, cycle: PCycle):
         self.p_cycles.append(cycle)
-    
-    def check_all_p_cycles_protection(self, src, dst, demand_in_slots):
-        for cycle in self.p_cycles:
-            if cycle.p_cycle_contains_flow(src, dst, demand_in_slots):
-                return cycle
-        return None
+
+    def remove_lp_p_cycle(self, lp: LightPath):
+        p_cycle_protect = lp.get_p_cycle()
+        p_cycle_protect.remove_protected_lightpath(lp)
+        if not p_cycle_protect.get_all_lp():
+            for i in range(0, len(p_cycle_protect.get_cycle_links()), 1):
+                self.pt.release_slots(self.pt.get_src_link(p_cycle_protect.get_cycle_links()[i]),
+                                      self.pt.get_dst_link(p_cycle_protect.get_cycle_links()[i]),
+                                      p_cycle_protect.get_slot_list())
+        list_protect = lp.get_list_be_protected()
+        for lp in list_protect:
+            lp.remove_be_protected_lightpath(lp)
 
     def __str__(self):
         topo = ""
