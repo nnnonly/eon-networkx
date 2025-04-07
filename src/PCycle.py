@@ -18,8 +18,7 @@ class PCycle:
         self.slot_list = slot_list
 
     def add_protected_lightpath(self, lightpath):
-        if lightpath not in self.protected_lightpaths:
-            self.protected_lightpaths.append(lightpath)
+        self.protected_lightpaths.append(lightpath)
 
     def remove_protected_lightpath(self, lightpath):
         if lightpath in self.protected_lightpaths:
@@ -52,7 +51,7 @@ class PCycle:
         return src in set(self.nodes) and dst in set(self.nodes)
 
     def has_sufficient_slots(self, required_slots):
-        return len(self.reserved_slots) >= required_slots
+        return self.reserved_slots >= required_slots
 
     def can_protect(self, primary_path):
         for link in primary_path:
@@ -60,17 +59,17 @@ class PCycle:
                 return True
         return False
 
-    def get_all_lp(self, lps: List[ProtectingLightPath]) -> List[List[int]]:
+    def get_all_lp(self) -> List[List[int]]:
         """get all lightpaths that are protected by the P-cycle"""
         paths = []
-        for lp in lps:
+        for lp in self.protected_lightpaths:
             paths.append(lp.get_links())
         return paths
 
     def can_add_links_disjoint(self, new_lp: List[int]):
         """add links p-cycle can protect"""
         if self.protected_lightpaths:
-            lp_protected = self.get_all_lp(self.protected_lightpaths)
+            lp_protected = self.get_all_lp()
             for lp in lp_protected:
                 if bool(set(lp) & set(new_lp)):
                     return False
@@ -81,13 +80,11 @@ class PCycle:
         if self.be_protection:
             lp_protect = self.be_protection.copy()
             for lp in lp_protect:
-                print("lp", lp)
-                print(bool(set(lp) & set(new_lp)))
-                if bool(set(lp) & set(new_lp)):
+                if bool(set(lp.get_links()) & set(new_lp.get_links())):
                     self.be_protection.remove(lp)
                     continue
         self.be_protection.append(new_lp)
         return self.be_protection
 
     def __str__(self):
-        return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}"
+        return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}, Cycle Links: {self.cycle_links}, Slot List: {self.slot_list}"

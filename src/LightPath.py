@@ -59,7 +59,7 @@ class LightPath:
         return len(self.links)
 
     def __str__(self) -> str:
-        light_path = f"id:{self.id}, src: {self.src}, dst:{self.dst}, links: "
+        light_path = f"id:{self.id}, src: {self.src}, dst:{self.dst}, pcycle:{self.p_cycle}, links: "
         for i in range(0, len(self.links), 1):
             light_path += f"{self.links[i]}-"
         return light_path

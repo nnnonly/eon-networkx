@@ -107,7 +107,7 @@ class FIPP(RSA):
                     for j in range(0, len(cycles_links), 1):
                         self.pt.release_slots(self.pt.get_src_link(cycles_links[j]),
                                               self.pt.get_dst_link(cycles_links[j]),
-                                              light_paths.get_slot_list())
+                                              p_cycle.get_slot_list())
                     for key, region in list_of_regions.items():
                         if len(region) >= demand_in_slots:
                             for i in range(demand_in_slots):
@@ -117,7 +117,7 @@ class FIPP(RSA):
                             if success:
                                 protected_lp = ProtectingLightPath(lp_id, primary_path[0], primary_path[-1], links,
                                                                    demand_in_slots)
-                                p_cycle[0].add_protected_lightpath(protected_lp)
+                                p_cycle.add_protected_lightpath(protected_lp)
                                 p_cycle.set_slot_list(fitted_slot_list)
                                 p_cycle.set_reversed_slots(demand_in_slots)
                                 for i in range(1, len(p_cycles_can_protect)):
@@ -135,7 +135,10 @@ class FIPP(RSA):
                             res_p_cycle, p_cycle = self.create_p_cycle_from_paths(primary_path, k_paths_protection[i], demand_in_slots, spectrum)
                             res_connect, lp_id = self.fit_connection(links=links, flow=flow, fitted_slot_list=fitted_slot_list, p_cycle=p_cycle)
                             if res_p_cycle & res_connect:
+                                protected_lp = ProtectingLightPath(id=lp_id, src=primary_path[0], dst=primary_path[-1], links_id=links, fss=demand_in_slots)
                                 p_cycle.set_slot_list(fitted_slot_list)
+                                p_cycle.add_protected_lightpath(protected_lp)
+                                return
 
         self.cp.block_flow(flow.get_id())
         return
@@ -214,13 +217,13 @@ class FIPP(RSA):
             if len(region) >= demand_in_slots:
                 for i in range(demand_in_slots):
                     fitted_slot_list.append(region[i])
-                new_p_cycle = PCycle(cycle_links=links, nodes=p_cycle_nodes, reserved_slots=demand_in_slots,
-                                     slot_list=fitted_slot_list)
-                self.vt.add_p_cycles(new_p_cycle)
-                for j in range(0, len(links), 1):
-                    self.pt.reserve_slots(self.pt.get_src_link(links[j]), self.pt.get_dst_link(links[j]),
-                                          fitted_slot_list)
-                return True, new_p_cycle
+            new_p_cycle = PCycle(cycle_links=links, nodes=p_cycle_nodes, reserved_slots=demand_in_slots,
+                                 slot_list=fitted_slot_list)
+            self.vt.add_p_cycles(new_p_cycle)
+            for j in range(0, len(links), 1):
+                self.pt.reserve_slots(self.pt.get_src_link(links[j]), self.pt.get_dst_link(links[j]),
+                                      fitted_slot_list)
+            return True, new_p_cycle
         return False, None
 
     def remove_edges(self, path):

@@ -95,14 +95,12 @@ class VirtualTopology:
         self.p_cycles.append(cycle)
 
     def remove_lp_p_cycle(self, lp: LightPath):
-        print("remove_lp_p_cycle", lp)
         p_cycle_protect = lp.get_p_cycle()
-        print("p_cycle_protect: ", p_cycle_protect)
         p_cycle_protect.remove_protected_lightpath(lp)
-        if p_cycle_protect.get_protected_lightpaths() == []:
+        if not p_cycle_protect.get_all_lp():
             for i in range(0, len(p_cycle_protect.get_cycle_links()), 1):
-                self.pt.release_slots(self.pt.get_src_link(p_cycle_protect[j]),
-                                      self.pt.get_dst_link(p_cycle_protect[j]),
+                self.pt.release_slots(self.pt.get_src_link(p_cycle_protect.get_cycle_links()[i]),
+                                      self.pt.get_dst_link(p_cycle_protect.get_cycle_links()[i]),
                                       p_cycle_protect.get_slot_list())
         list_protect = lp.get_list_be_protected()
         for lp in list_protect:
