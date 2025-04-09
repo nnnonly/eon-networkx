@@ -26,10 +26,10 @@ class PCycle:
                 self.protected_lightpaths.remove(lp)
                 return
 
-    def remove_be_protected_lightpath(self, lightpath):
+    def remove_be_protected_lightpath(self, lightpath: int):
         for lp in self.be_protection:
             if lp.get_id() == lightpath:
-                self.protected_lightpaths.remove(lp)
+                self.be_protection.remove(lp)
                 return
 
     def get_cycle_links(self):
@@ -91,7 +91,7 @@ class PCycle:
             lp_protect = self.be_protection.copy()
             for lp in lp_protect:
                 if bool(set(lp.get_links()) & set(new_lp.get_links())):
-                    self.be_protection.remove(lp)
+                    self.remove_be_protected_lightpath(lp.get_id())
                     continue
         self.be_protection.append(new_lp)
         return self.be_protection
@@ -105,4 +105,4 @@ class PCycle:
 
 
     def __str__(self):
-        return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}, Cycle Links: {self.cycle_links}, Slot List: {self.slot_list}"
+        return f"P-cycle: {self.cycle_links}, Protected Paths: {len(self.protected_lightpaths)}, Reserved Slots: {self.reserved_slots}"

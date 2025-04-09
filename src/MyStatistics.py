@@ -244,27 +244,33 @@ class MyStatistics:
             if self.number_arrivals % 100 == 0:
                 self.calculate_periodical_statistics()
             if self.number_arrivals % 1000 == 0:
-                cycles_to_remove = []
-                for i in range(len(self.vt.get_p_cycles()) - 1, -1, -1):
-                    for j in range(len(self.vt.get_p_cycles())):
-                        if bool(set(self.vt.get_p_cycles()[i].get_all_lp_id(
-                                self.vt.get_p_cycles()[i].get_protected_lightpaths())) & set(
-                                self.vt.get_p_cycles()[j].get_all_lp_id(self.vt.get_p_cycles()[j].get_be_protected()))):
-                            for lp in self.vt.get_p_cycles()[i].get_protected_lightpaths():
-                                self.vt.get_p_cycles()[j].add_protected_lightpath(lp)
-                                print(lp.get_id())
-
-                                print(self.vt.get_light_path(lp.get_id()))
-                                self.vt.get_light_path(lp.get_id()).set_p_cycle(self.vt.get_p_cycles()[j])
-                            cycles_to_remove.append(self.vt.get_p_cycles()[i])
-                print("cycles_to_remove: ", len(cycles_to_remove))
-                for cycle in cycles_to_remove:
-                    if not cycle.get_all_lp():
-                        for i in range(0, len(cycle.get_cycle_links()), 1):
-                            self.pt.release_slots(self.pt.get_src_link(cycle.get_cycle_links()[i]),
-                                                  self.pt.get_dst_link(cycle.get_cycle_links()[i]),
-                                                  cycle.get_slot_list())
-                    self.p_cycles.remove(cycle)
+                # cycles_to_remove = []
+                # for i in range(len(self.vt.get_p_cycles()) - 1, -1, -1):
+                #     for j in range(len(self.vt.get_p_cycles())):
+                #         print(self.vt.get_p_cycles()[i].get_all_lp_id(self.vt.get_p_cycles()[i].get_protected_lightpaths()))
+                #         print(self.vt.get_p_cycles()[j].get_all_lp_id(self.vt.get_p_cycles()[j].get_be_protected()))
+                #         protected_lightpaths_i = set(self.vt.get_p_cycles()[i].get_all_lp_id(
+                #             self.vt.get_p_cycles()[i].get_protected_lightpaths()))
+                #         be_protected_j = set(
+                #             self.vt.get_p_cycles()[j].get_all_lp_id(self.vt.get_p_cycles()[j].get_be_protected()))
+                #
+                #         # Kiểm tra điều kiện tập con hợp lệ
+                #         if protected_lightpaths_i.issubset(be_protected_j):
+                #             for lp in self.vt.get_p_cycles()[i].get_protected_lightpaths():
+                #                 self.vt.get_p_cycles()[j].add_protected_lightpath(lp)
+                #                 print(lp.get_id())
+                #
+                #                 print(self.vt.get_light_path(lp.get_id()))
+                #                 self.vt.get_light_path(lp.get_id()).set_p_cycle(self.vt.get_p_cycles()[j])
+                #             cycles_to_remove.append(self.vt.get_p_cycles()[i])
+                # print("cycles_to_remove: ", len(cycles_to_remove))
+                # for cycle in cycles_to_remove:
+                #     if not cycle.get_all_lp():
+                #         for i in range(0, len(cycle.get_cycle_links()), 1):
+                #             self.pt.release_slots(self.pt.get_src_link(cycle.get_cycle_links()[i]),
+                #                                   self.pt.get_dst_link(cycle.get_cycle_links()[i]),
+                #                                   cycle.get_slot_list())
+                #     self.p_cycles.remove(cycle)
                 print("MyStatistics: 5000")
         except Exception as e:
             print("Error in MyStatistics: ", e)
